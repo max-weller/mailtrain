@@ -52,6 +52,7 @@ let server = new SMTPServer({
                 session.message = message;
 
                 log.verbose('VERP', 'Incoming message for Campaign %s, List %s, Subscription %s', message.campaign, message.list, message.subscription);
+		log.verbose('VERP', 'Address:', address);
 
                 callback();
             });
@@ -77,7 +78,9 @@ let server = new SMTPServer({
             let bounceResult;
 
             try {
+		//log.verbose('VERP', 'Verp Message:', body);
                 bounceResult = [].concat(bh.parse_email(body) || []).shift();
+		log.verbose('VERP', 'Bounce Handler result: ', bounceResult);
             } catch (E) {
                 log.error('Bounce', 'Failed parsing bounce message');
                 log.error('Bounce', JSON.stringify(body));
@@ -93,7 +96,7 @@ let server = new SMTPServer({
                         log.verbose('VERP', 'Marked message %s as unsubscribed', session.campaignId);
                     }
                     callback(null, 'Message accepted');
-                });
+                }, 'verp action='+bounceResult.action+' status='+bounceResult.status);
             }
         });
     }

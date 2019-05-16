@@ -268,17 +268,20 @@ router.post('/zone-mta', (req, res, next) => {
     }
 
     if (req.body.id) {
+        log.verbose('ZoneMTA', 'Webhook body', req.body);
         campaigns.findMailByResponse(req.body.id, (err, message) => {
             if (err || !message) {
                 return;
             }
-            campaigns.updateMessage(message, 'bounced', true, (err, updated) => {
+            var hard_fail = true;
+            if (req.body.category == 'capacity' || req.body.category == 'spam') hard_fail = false; // do not unsubscribe for full mailbox
+            campaigns.updateMessage(message, 'bounced', hard_fail, (err, updated) => {
                 if (err) {
                     log.error('ZoneMTA', 'Failed updating message: %s', err);
                 } else if (updated) {
                     log.verbose('ZoneMTA', 'Marked message %s as bounced', req.body.id);
                 }
-            });
+            }, 'zone-mta cat='+req.body.category+' res='+req.body.response);
         });
     }
 
