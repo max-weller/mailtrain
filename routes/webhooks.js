@@ -273,9 +273,11 @@ router.post('/zone-mta', (req, res, next) => {
             if (err || !message) {
                 return;
             }
-            var hard_fail = true;
-            if (req.body.category == 'capacity' || req.body.category == 'spam') hard_fail = false; // do not unsubscribe for full mailbox
-            campaigns.updateMessage(message, 'bounced', hard_fail, (err, updated) => {
+            var severity = 5;
+            if (req.body.category == 'capacity') severity = 1; // do not unsubscribe for full mailbox
+            if (req.body.category == 'spam') severity = 2; 
+            if (req.body.category == 'dns') severity = 3; 
+            campaigns.updateMessage(message, 'bounced', severity, (err, updated) => {
                 if (err) {
                     log.error('ZoneMTA', 'Failed updating message: %s', err);
                 } else if (updated) {
